@@ -246,7 +246,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             data[CONF_HOST],
             data[CONF_DEVICE_ID],
             data[CONF_LOCAL_KEY],
-            data[CONF_CID],
+            data[CONF_CID] if CONF_CID in data else None,
             float(data[CONF_PROTOCOL_VERSION]),
             data[CONF_ENABLE_DEBUG],
         )
