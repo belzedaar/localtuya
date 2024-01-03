@@ -148,7 +148,11 @@ class TuyaDevice(pytuya.TuyaListener, pytuya.ContextualLogger):
         self._unsub_interval = None
         self._entities = []
         self._local_key = self._dev_config_entry[CONF_LOCAL_KEY]
-        self._cid = self._dev_config_entry[CONF_CID]
+        self._cid = None
+        try:
+            self._cid = self._dev_config_entry[CONF_CID]
+        except KeyError:
+            pass
         self._default_reset_dpids = None
         if CONF_RESET_DPIDS in self._dev_config_entry:
             reset_ids_str = self._dev_config_entry[CONF_RESET_DPIDS].split(",")
