@@ -35,6 +35,7 @@ from .const import (
     CONF_EDIT_DEVICE,
     CONF_ENABLE_DEBUG,
     CONF_LOCAL_KEY,
+    CONF_CID,
     CONF_MANUAL_DPS,
     CONF_MODEL,
     CONF_NO_CLOUD,
@@ -91,6 +92,7 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Required(CONF_LOCAL_KEY): cv.string,
+        vol.Optional(CONF_CID): cv.string,
         vol.Required(CONF_PROTOCOL_VERSION, default="3.3"): vol.In(
             ["3.1", "3.2", "3.3", "3.4"]
         ),
@@ -137,6 +139,7 @@ def options_schema(entities):
             vol.Required(CONF_FRIENDLY_NAME): cv.string,
             vol.Required(CONF_HOST): cv.string,
             vol.Required(CONF_LOCAL_KEY): cv.string,
+            vol.Optional(CONF_CID): cv.string,
             vol.Required(CONF_PROTOCOL_VERSION, default="3.3"): vol.In(
                 ["3.1", "3.2", "3.3", "3.4"]
             ),
@@ -243,6 +246,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             data[CONF_HOST],
             data[CONF_DEVICE_ID],
             data[CONF_LOCAL_KEY],
+            data[CONF_CID],
             float(data[CONF_PROTOCOL_VERSION]),
             data[CONF_ENABLE_DEBUG],
         )

@@ -551,7 +551,7 @@ class TuyaProtocol(asyncio.Protocol, ContextualLogger):
     """Implementation of the Tuya protocol."""
 
     def __init__(
-        self, dev_id, local_key, protocol_version, enable_debug, on_connected, listener
+        self, dev_id, local_key, cid, protocol_version, enable_debug, on_connected, listener
     ):
         """
         Initialize a new TuyaInterface.
@@ -570,6 +570,7 @@ class TuyaProtocol(asyncio.Protocol, ContextualLogger):
         self.id = dev_id
         self.local_key = local_key.encode("latin1")
         self.real_local_key = self.local_key
+        self.cid = cid
         self.dev_type = "type_0a"
         self.dps_to_request = {}
 
@@ -620,6 +621,9 @@ class TuyaProtocol(asyncio.Protocol, ContextualLogger):
             if msg.seqno > 0:
                 self.seqno = msg.seqno + 1
             decoded_message = self._decode_payload(msg.payload)
+            # if we have a CID, and this message is not for us, ignore it
+            if self.cid and ("cid" in decoded_message) and (self.cid != decoded_message["cid"]):
+                return 
             if "dps" in decoded_message:
                 self.dps_cache.update(decoded_message["dps"])
 
@@ -794,7 +798,9 @@ class TuyaProtocol(asyncio.Protocol, ContextualLogger):
         """Return device status."""
         status = await self.exchange(DP_QUERY)
         if status and "dps" in status:
-            self.dps_cache.update(status["dps"])
+            # ignore status messages not for us
+            if (not self.cid) or (("cid" in status) and (self.cid == status["cid"])):
+                self.dps_cache.update(status["dps"])
         return self.dps_cache
 
     async def heartbeat(self):
@@ -1151,6 +1157,9 @@ class TuyaProtocol(asyncio.Protocol, ContextualLogger):
         elif self.dev_type == "type_0d" and command == DP_QUERY:
             json_data["dps"] = self.dps_to_request
 
+        if self.cid:
+            json_data["cid"] = self.cid
+
         if json_data == "":
             payload = ""
         else:
@@ -1170,6 +1179,7 @@ async def connect(
     address,
     device_id,
     local_key,
+    cid,
     protocol_version,
     enable_debug,
     listener=None,
@@ -1183,6 +1193,7 @@ async def connect(
         lambda: TuyaProtocol(
             device_id,
             local_key,
+            cid,
             protocol_version,
             enable_debug,
             on_connected,
